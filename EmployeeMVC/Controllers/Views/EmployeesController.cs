@@ -1,8 +1,5 @@
 ﻿#nullable disable
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
@@ -10,6 +7,9 @@ using EmployeeMVC.Data;
 using EmployeeMVC.Models;
 using EmployeeMVC.Repository;
 using EmployeeMVC.Models.DTOs;
+using System.Data;
+using ClosedXML.Excel;
+using Aspose.Pdf;
 
 namespace EmployeeMVC.Controllers.Views
 {
@@ -20,11 +20,35 @@ namespace EmployeeMVC.Controllers.Views
         }
 
         // GET: Employees
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string Eid, string Name, DateTime BDate, string Address, string Phone, string Email)
         {
             try
             {
                 var Employeelist = (await _repositoryWrapper.Employee.FindAllAsync()).Select(x => x.AsDTO());
+                if (!string.IsNullOrEmpty(Eid) && int.TryParse(Eid, out int o))
+                {
+                    Employeelist = Employeelist.Where(s => s.Id == o);
+                }
+                if (!string.IsNullOrEmpty(Name))
+                {
+                    Employeelist = Employeelist.Where(s => s.Name!.Contains(Name));
+                }
+                if (BDate != DateTime.MinValue)
+                {
+                    Employeelist = Employeelist.Where(s => s.DateOfBirth == BDate);
+                }
+                if (!string.IsNullOrEmpty(Address))
+                {
+                    Employeelist = Employeelist.Where(s => s.Address!.Contains(Address));
+                }
+                if (!string.IsNullOrEmpty(Phone))
+                {
+                    Employeelist = Employeelist.Where(s => s.Phone!.Contains(Phone));
+                }
+                if (!string.IsNullOrEmpty(Email))
+                {
+                    Employeelist = Employeelist.Where(s => s.Email!.Contains(Email));
+                }
                 return View(Employeelist);
             }
             catch (Exception ex)
@@ -32,6 +56,79 @@ namespace EmployeeMVC.Controllers.Views
                 await _repositoryWrapper.Eventlog.Error("Employee List View fail", ex.Message);
                 return NotFound();
             }
+        }
+
+        public async Task<ActionResult> ExportToExcel()
+        {
+            DataTable dtProduct = await GetEmployeesListAsync();
+
+            using (XLWorkbook woekBook = new XLWorkbook())
+            {
+                woekBook.Worksheets.Add(dtProduct);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    woekBook.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "EmployeesList.xlsx");
+                }
+            }
+        }
+
+        public async Task<ActionResult> ExportToPdf()
+        {
+            DataTable dtProduct = await GetEmployeesListAsync();
+
+            if (dtProduct.Rows.Count > 0)
+            {
+                var document = new Document
+                {
+                    PageInfo = new PageInfo { Margin = new MarginInfo(28, 28, 28, 40) }
+                };
+                var pdfPage = document.Pages.Add();
+                Table table = new Table
+                {
+                    ColumnWidths = "12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5% 12.5%",
+                    DefaultCellPadding = new MarginInfo(10, 5, 10, 5),
+                    Border = new BorderInfo(BorderSide.All, .5f, Color.Black),
+                    DefaultCellBorder = new BorderInfo(BorderSide.All, .2f, Color.Black)
+                };
+
+                table.ImportDataTable(dtProduct, true, 0, 0);
+                document.Pages[1].Paragraphs.Add(table);
+
+                using (var stream = new MemoryStream())
+                {
+                    document.Save(stream);
+                    return new FileContentResult(stream.ToArray(), "application/pdf")
+                    {
+                        FileDownloadName = "EmployeesList.pdf"
+                    };
+                }
+            }
+            return View();
+        }
+
+        private async Task<DataTable> GetEmployeesListAsync()
+        {
+            var Employeelist = (await _repositoryWrapper.Employee.FindAllAsync()).Select(x => x.AsDTO());
+
+            DataTable dtEmployee = new DataTable("EmployeesList");
+            dtEmployee.Columns.AddRange(new DataColumn[8] 
+            { 
+                new DataColumn("ID"),
+                new DataColumn("Name"),
+                new DataColumn("Date of Birth"),
+                new DataColumn("Address"),
+                new DataColumn("Phone"),
+                new DataColumn("Email"),
+                new DataColumn("Created Time"),
+                new DataColumn("Modified Time")
+            });
+            foreach (var item in Employeelist)
+            {
+                dtEmployee.Rows.Add(item.Id, item.Name, item.DateOfBirth, item.Address, item.Phone, item.Email, item.CreatedTime, item.ModifiedTime);
+            }
+
+            return dtEmployee;
         }
 
         // GET: Employees/Details/5

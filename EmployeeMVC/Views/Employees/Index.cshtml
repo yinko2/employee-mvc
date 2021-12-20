@@ -6,12 +6,35 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="row md-8">
+    <div class="col-md-4 text-left">
+        <a asp-action="Create">Create New</a>
+    </div>
+
+    <div class="col-md-4 text-right">
+        <a asp-action="ExportToExcel">Export To Excel</a>
+        <a asp-action="ExportToPDF">Export To PDF</a>
+    </div>
+</div>
+
+<form asp-controller="Employees" asp-action="Index"  method="get">
+    <p>
+        Id: <input type="text" name="Eid" />
+        Name: <input type="text" name="Name" />
+        Date of Birth: <input type="date" name="BDate" />
+        Address: <input type="text" name="Address" />
+        Phone: <input type="text" name="Phone" />
+        Email: <input type="text" name="Email" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+<a asp-action="Index">Clear Filter</a>
 <table class="table">
     <thead>
         <tr>
+            <th>
+                @Html.DisplayNameFor(model => model.Id)
+            </th>
             <th>
                 @Html.DisplayNameFor(model => model.Name)
             </th>
@@ -39,6 +62,9 @@
     <tbody>
 @foreach (var item in Model!) {
         <tr>
+            <td>
+                @Html.DisplayFor(modelItem => item.Id)
+            </td>
             <td>
                 @Html.DisplayFor(modelItem => item.Name)
             </td>

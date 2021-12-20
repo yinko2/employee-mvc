@@ -7,5 +7,6 @@ namespace EmployeeMVC.Repository
     public interface IHolidayRepository: IRepositoryBase<Holiday>
     {
         Task<int> FindExistingDate(DateTime date);
+        Task<IEnumerable<Holiday>> LoadHolidaysWithInterval(DateTime start, DateTime end);
     }
 }

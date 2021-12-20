@@ -9,6 +9,9 @@ using Microsoft.EntityFrameworkCore;
 using EmployeeMVC.Data;
 using EmployeeMVC.Models;
 using EmployeeMVC.Repository;
+using System.Data;
+using ClosedXML.Excel;
+using Aspose.Pdf;
 
 namespace EmployeeMVC.Controllers.Views
 {
@@ -20,12 +23,20 @@ namespace EmployeeMVC.Controllers.Views
         }
 
         // GET: Holidays
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime Date, string Name)
         {
             
             try
             {
                 var Holidaylist = await _repositoryWrapper.Holiday.FindAllAsync();
+                if (Date != DateTime.MinValue)
+                {
+                    Holidaylist = Holidaylist.Where(s => s.Date == Date);
+                }
+                if (!string.IsNullOrEmpty(Name))
+                {
+                    Holidaylist = Holidaylist.Where(s => s.Name!.Contains(Name));
+                }
                 return View(Holidaylist);
             }
             catch (Exception ex)
@@ -185,6 +196,74 @@ namespace EmployeeMVC.Controllers.Views
                 await _repositoryWrapper.Eventlog.Error("delete fail", ex.Message);
                 return BadRequest();
             }
+        }
+
+        public async Task<ActionResult> ExportToExcel()
+        {
+            DataTable dtHoliday = await GetHolidaysListAsync();
+
+            using (XLWorkbook woekBook = new XLWorkbook())
+            {
+                woekBook.Worksheets.Add(dtHoliday);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    woekBook.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "HolidaysList.xlsx");
+                }
+            }
+        }
+
+        public async Task<ActionResult> ExportToPdf()
+        {
+            DataTable dtHoliday = await GetHolidaysListAsync();
+
+            if (dtHoliday.Rows.Count > 0)
+            {
+                var document = new Document
+                {
+                    PageInfo = new PageInfo { Margin = new MarginInfo(28, 28, 28, 40) }
+                };
+                var pdfPage = document.Pages.Add();
+                Table table = new Table
+                {
+                    ColumnWidths = "33% 33% 33%",
+                    DefaultCellPadding = new MarginInfo(10, 5, 10, 5),
+                    Border = new BorderInfo(BorderSide.All, .5f, Color.Black),
+                    DefaultCellBorder = new BorderInfo(BorderSide.All, .2f, Color.Black)
+                };
+
+                table.ImportDataTable(dtHoliday, true, 0, 0);
+                document.Pages[1].Paragraphs.Add(table);
+
+                using (var stream = new MemoryStream())
+                {
+                    document.Save(stream);
+                    return new FileContentResult(stream.ToArray(), "application/pdf")
+                    {
+                        FileDownloadName = "HolidaysList.pdf"
+                    };
+                }
+            }
+            return View();
+        }
+
+        private async Task<DataTable> GetHolidaysListAsync()
+        {
+            var Holidaylist = await _repositoryWrapper.Holiday.FindAllAsync();
+
+            DataTable dtHoliday = new DataTable("HolidaysList");
+            dtHoliday.Columns.AddRange(new DataColumn[3]
+            {
+                new DataColumn("ID"),
+                new DataColumn("Date"),
+                new DataColumn("Name")
+            });
+            foreach (var item in Holidaylist)
+            {
+                dtHoliday.Rows.Add(item.Id, item.Name, item.Date.ToShortDateString());
+            }
+
+            return dtHoliday;
         }
 
         private async Task<bool> HolidayExists(int id)

@@ -6,9 +6,27 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="row md-8">
+    <div class="col-md-4 text-left">
+        <a asp-action="Create">Create New</a>
+    </div>
+
+    <div class="col-md-4 text-right">
+        <a asp-action="ExportToExcel">Export To Excel</a>
+        <a asp-action="ExportToPDF">Export To PDF</a>
+    </div>
+</div>
+<form asp-controller="Leaves" asp-action="Index"  method="get">
+    <p>
+        Employee Id: <input type="text" name="Eid" />
+        Employee Name: <input type="text" name="EName" />
+        Date: <input type="date" name="Date" />
+        Reason: <input type="text" name="Reason" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+<a asp-action="Index">Clear Filter</a>
+    </tr>
 <table class="table">
     <thead>
         <tr>

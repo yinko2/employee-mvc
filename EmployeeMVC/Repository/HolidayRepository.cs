@@ -21,5 +21,13 @@ namespace EmployeeMVC.Repository
             return query;
         }
 
+        public async Task<IEnumerable<Holiday>> LoadHolidaysWithInterval(DateTime start, DateTime end)
+        {
+            var query = await (from h in RepositoryContext.Holidays
+                               where h.Date >= start && h.Date <= end
+                               select h).ToListAsync();
+            return query;
+        }
+
     }
 }

@@ -10,6 +10,9 @@ using EmployeeMVC.Data;
 using EmployeeMVC.Models;
 using EmployeeMVC.Repository;
 using EmployeeMVC.Models.DTOs;
+using System.Data;
+using ClosedXML.Excel;
+using Aspose.Pdf;
 
 namespace EmployeeMVC.Controllers.Views
 {
@@ -20,11 +23,27 @@ namespace EmployeeMVC.Controllers.Views
         }
 
         // GET: Leaves
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(string Eid, string EName, DateTime Date, string Reason)
         {
             try
             {
-                var Leavelist = await _repositoryWrapper.Leave.LoadLeaveList();
+                var Leavelist = await _repositoryWrapper.Leave.LoadLeaveList(DateTime.MinValue, DateTime.MinValue);
+                if (!string.IsNullOrEmpty(Eid) && int.TryParse(Eid, out int o))
+                {
+                    Leavelist = Leavelist.Where(s => s.EmployeeId == o);
+                }
+                if (!string.IsNullOrEmpty(EName))
+                {
+                    Leavelist = Leavelist.Where(s => s.EmployeeName!.Contains(EName));
+                }
+                if (Date != DateTime.MinValue)
+                {
+                    Leavelist = Leavelist.Where(s => s.Date == Date);
+                }
+                if (!string.IsNullOrEmpty(Reason))
+                {
+                    Leavelist = Leavelist.Where(s => s.Reason!.Contains(Reason));
+                }
                 return View(Leavelist);
             }
             catch (Exception ex)
@@ -67,6 +86,14 @@ namespace EmployeeMVC.Controllers.Views
                 if (Employee == null)
                 {
                     ModelState.AddModelError("EmployeeId", "Employee does not exist");
+                    return View(leaveDTO);
+                }
+
+                int HolidayExistingId = await _repositoryWrapper.Holiday.FindExistingDate(leaveDTO.Date);
+
+                if (HolidayExistingId > 0)
+                {
+                    ModelState.AddModelError("Date", "Do not apply leave on public holiday");
                     return View(leaveDTO);
                 }
                 Leave leave = new()
@@ -213,6 +240,78 @@ namespace EmployeeMVC.Controllers.Views
         private async Task<bool> LeaveExists(int id)
         {
             return await _repositoryWrapper.Leave.IsExist(id);
+        }
+
+        public async Task<ActionResult> ExportToExcel()
+        {
+            DataTable dtLeave = await GetLeavesListAsync();
+
+            using (XLWorkbook woekBook = new XLWorkbook())
+            {
+                woekBook.Worksheets.Add(dtLeave);
+                using (MemoryStream stream = new MemoryStream())
+                {
+                    woekBook.SaveAs(stream);
+                    return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "LeavesList.xlsx");
+                }
+            }
+        }
+
+        public async Task<ActionResult> ExportToPdf()
+        {
+            DataTable dtLeave = await GetLeavesListAsync();
+
+            if (dtLeave.Rows.Count > 0)
+            {
+                var document = new Document
+                {
+                    PageInfo = new PageInfo { Margin = new MarginInfo(28, 28, 28, 40) }
+                };
+                var pdfPage = document.Pages.Add();
+                Table table = new Table
+                {
+                    ColumnWidths = "14.5% 14.5% 14.5% 14.5% 14.5% 14.5% 14.5%",
+                    DefaultCellPadding = new MarginInfo(10, 5, 10, 5),
+                    Border = new BorderInfo(BorderSide.All, .5f, Color.Black),
+                    DefaultCellBorder = new BorderInfo(BorderSide.All, .2f, Color.Black)
+                };
+
+                table.ImportDataTable(dtLeave, true, 0, 0);
+                document.Pages[1].Paragraphs.Add(table);
+
+                using (var stream = new MemoryStream())
+                {
+                    document.Save(stream);
+                    return new FileContentResult(stream.ToArray(), "application/pdf")
+                    {
+                        FileDownloadName = "LeavesList.pdf"
+                    };
+                }
+            }
+            return View();
+        }
+
+        private async Task<DataTable> GetLeavesListAsync()
+        {
+            var Leavelist = await _repositoryWrapper.Leave.LoadLeaveList(DateTime.MinValue, DateTime.MinValue);
+
+            DataTable dtLeave = new DataTable("LeavesList");
+            dtLeave.Columns.AddRange(new DataColumn[7]
+            {
+                new DataColumn("ID"),
+                new DataColumn("Employee ID"),
+                new DataColumn("Employee Name"),
+                new DataColumn("Date"),
+                new DataColumn("Reason"),
+                new DataColumn("Created Time"),
+                new DataColumn("Modified Time")
+            });
+            foreach (var item in Leavelist)
+            {
+                dtLeave.Rows.Add(item.Id, item.EmployeeId, item.EmployeeName, item.Date, item.Reason, item.CreatedTime, item.ModifiedTime);
+            }
+
+            return dtLeave;
         }
     }
 }

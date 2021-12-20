@@ -6,9 +6,24 @@
 
 <h1>Index</h1>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+<div class="row md-8">
+    <div class="col-md-4 text-left">
+        <a asp-action="Create">Create New</a>
+    </div>
+
+    <div class="col-md-4 text-right">
+        <a asp-action="ExportToExcel">Export To Excel</a>
+        <a asp-action="ExportToPDF">Export To PDF</a>
+    </div>
+</div>
+<form asp-controller="Holidays" asp-action="Index"  method="get">
+    <p>
+        Date: <input type="date" name="Date" />
+        Name: <input type="text" name="Name" />
+        <input type="submit" value="Filter" />
+    </p>
+</form>
+<a asp-action="Index">Clear Filter</a>
 <table class="table">
     <thead>
         <tr>

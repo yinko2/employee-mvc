@@ -24,8 +24,6 @@ namespace EmployeeMVC.Data
         public virtual DbSet<Employee> Employees { get; set; } = null!;
         public virtual DbSet<Holiday> Holidays { get; set; } = null!;
         public virtual DbSet<Leave> Leaves { get; set; } = null!;
-        public virtual DbSet<User> Users { get; set; } = null!;
-        public virtual DbSet<Userlevel> Userlevels { get; set; } = null!;
         public virtual DbSet<Eventlog> Eventlogs { get; set; } = null!;
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
@@ -107,38 +105,6 @@ namespace EmployeeMVC.Data
                 entity.Property(e => e.ModifiedTime).HasColumnType("datetime");
 
                 entity.Property(e => e.Reason).HasMaxLength(100);
-            });
-
-            modelBuilder.Entity<User>(entity =>
-            {
-                entity.ToTable("tbl_user");
-
-                entity.HasIndex(e => e.UserLevelId, "UserLevelID");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.CreatedTime).HasColumnType("datetime");
-
-                entity.Property(e => e.ModifiedTime).HasColumnType("datetime");
-
-                entity.Property(e => e.Password).HasMaxLength(255);
-
-                entity.Property(e => e.PasswordSalt).HasMaxLength(255);
-
-                entity.Property(e => e.UserLevelId).HasColumnName("UserLevelID");
-
-                entity.Property(e => e.UserName).HasMaxLength(100);
-            });
-
-            modelBuilder.Entity<Userlevel>(entity =>
-            {
-                entity.ToTable("tbl_userlevel");
-
-                entity.Property(e => e.Id).HasColumnName("ID");
-
-                entity.Property(e => e.Description).HasMaxLength(100);
-
-                entity.Property(e => e.UserLevel).HasMaxLength(50);
             });
 
             OnModelCreatingPartial(modelBuilder);

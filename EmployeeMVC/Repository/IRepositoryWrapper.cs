@@ -12,11 +12,8 @@ namespace EmployeeMVC.Repository
 
         IEmployeeRepository Employee { get; }
 
-        IUserRepository User { get; }
-
         ILeaveRepository Leave { get; }
 
-        IUserLevelRepository UserLevel { get; }
 //////Template Place Holder/////
     }
 }

@@ -4,17 +4,6 @@ namespace EmployeeMVC.Models
 {
     public static class Extensions
     {
-        public static UserDTO AsDTO(this User item)
-        {
-            return new UserDTO
-            (
-                item.Id,
-                item.UserLevelId,
-                item.UserName,
-                item.CreatedTime,
-                item.ModifiedTime
-            );
-        }
 
         public static EmployeeDTO AsDTO(this Employee item)
         {

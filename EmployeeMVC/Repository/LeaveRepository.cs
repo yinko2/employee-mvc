@@ -14,18 +14,39 @@ namespace EmployeeMVC.Repository
         {
         }
 
-        public async Task<IEnumerable<LeaveDTO>> LoadLeaveList()
+        public async Task<IEnumerable<LeaveDTO>> LoadLeaveList(DateTime start, DateTime end)
         {
-            var query = await (from l in RepositoryContext.Leaves
-                               join e in RepositoryContext.Employees on l.EmployeeId equals e.Id
-                               select new LeaveDTO{ 
-                                   Id = l.Id, 
-                                   Date = l.Date, 
-                                   EmployeeId = l.EmployeeId,
-                                   EmployeeName = e.Name, 
-                                   Reason = l.Reason,
-                                   CreatedTime = l.CreatedTime,
-                                   ModifiedTime = l.ModifiedTime }).ToListAsync();
+            IEnumerable<LeaveDTO> query;
+            if (start != DateTime.MinValue && end != DateTime.MinValue)
+            {
+                query = await (from l in RepositoryContext.Leaves.Where(x => start <= x.Date && x.Date <= end)
+                                   join e in RepositoryContext.Employees on l.EmployeeId equals e.Id
+                                   select new LeaveDTO
+                                   {
+                                       Id = l.Id,
+                                       Date = l.Date,
+                                       EmployeeId = l.EmployeeId,
+                                       EmployeeName = e.Name,
+                                       Reason = l.Reason,
+                                       CreatedTime = l.CreatedTime,
+                                       ModifiedTime = l.ModifiedTime
+                                   }).ToListAsync();
+            }
+            else
+            {
+                query = await (from l in RepositoryContext.Leaves
+                                   join e in RepositoryContext.Employees on l.EmployeeId equals e.Id
+                                   select new LeaveDTO
+                                   {
+                                       Id = l.Id,
+                                       Date = l.Date,
+                                       EmployeeId = l.EmployeeId,
+                                       EmployeeName = e.Name,
+                                       Reason = l.Reason,
+                                       CreatedTime = l.CreatedTime,
+                                       ModifiedTime = l.ModifiedTime
+                                   }).ToListAsync();
+            }
             return query.OrderByDescending(x => x.Date);
         }
 

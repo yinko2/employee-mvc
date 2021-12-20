@@ -49,20 +49,6 @@ namespace EmployeeMVC.Repository
             }
         }
 
-        private IUserRepository? oUser;
-        public IUserRepository User
-        {
-            get
-            {
-                if (oUser == null)
-                {
-                    oUser = new UserRepository(_repoContext);
-                }
-
-                return oUser;
-            }
-        }
-
         private ILeaveRepository? oLeave;
         public ILeaveRepository Leave
         {
@@ -74,20 +60,6 @@ namespace EmployeeMVC.Repository
                 }
 
                 return oLeave;
-            }
-        }
-
-        private IUserLevelRepository? oUserLevel;
-        public IUserLevelRepository UserLevel
-        {
-            get
-            {
-                if (oUserLevel == null)
-                {
-                    oUserLevel = new UserLevelRepository(_repoContext);
-                }
-
-                return oUserLevel;
             }
         }
 //////Template Place Holder/////

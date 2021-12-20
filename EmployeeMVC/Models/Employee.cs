@@ -14,7 +14,7 @@ namespace EmployeeMVC.Models
         [Required, StringLength(100)]
         public string Name { get; set; } = null!;
 
-        [DataType(DataType.Date), Display(Name ="Date of Birth")]
+        [DataType(DataType.Date), Display(Name = "Date of Birth")]
         public DateTime DateOfBirth { get; set; }
 
         [StringLength(200)]
