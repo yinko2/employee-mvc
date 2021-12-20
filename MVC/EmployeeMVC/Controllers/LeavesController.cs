@@ -14,7 +14,7 @@ using System.Data;
 using ClosedXML.Excel;
 using Aspose.Pdf;
 
-namespace EmployeeMVC.Controllers.Views
+namespace EmployeeMVC.Controllers
 {
     public class LeavesController : BaseController
     {

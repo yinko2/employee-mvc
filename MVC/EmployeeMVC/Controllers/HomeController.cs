@@ -3,7 +3,7 @@ using EmployeeMVC.Repository;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
-namespace EmployeeMVC.Controllers.Views
+namespace EmployeeMVC.Controllers
 {
     public class HomeController : BaseController
     {
