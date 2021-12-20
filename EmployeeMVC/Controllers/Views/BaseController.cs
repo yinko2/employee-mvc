@@ -7,9 +7,11 @@ using EmployeeMVC.Models;
 using EmployeeMVC.Repository;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
+using Microsoft.AspNetCore.Authorization;
 
 namespace EmployeeMVC.Controllers
 {
+    [Authorize]
     public class BaseController : Controller
     {
         // public TokenData _tokenData = new TokenData();

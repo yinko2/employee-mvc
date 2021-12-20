@@ -49,18 +49,5 @@ namespace EmployeeMVC.Extensions
                 };
             });
         }
-
-        public static IWebHostBuilder CreateWebHostBuilder(string[] args)
-        {
-            return WebHost.CreateDefaultBuilder(args)
-                .UseKestrel()
-                .UseContentRoot(Directory.GetCurrentDirectory())
-                .UseIISIntegration()
-                .ConfigureKestrel((context, options) =>
-                {
-                    options.AllowSynchronousIO = true;
-                });
-        }
-
     }
 }

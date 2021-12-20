@@ -1,10 +1,12 @@
 using EmployeeMVC.Data;
 using EmployeeMVC.Extensions;
+using EmployeeMVC.Services;
 using EmployeeMVC.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
+using System.Configuration;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -16,10 +18,41 @@ var mysqlDbSettings = _configuration.GetSection(nameof(MysqlDbSettings)).Get<Mys
 
 // Add services to the container.
 builder.Services.ConfigureCors(_configuration);
+
+builder.Services.AddAuthentication("Bearer")
+    .AddIdentityServerAuthentication("Bearer", options =>
+    {
+        options.ApiName = "EmployeeMVC";
+        options.Authority = "https://localhost:5443";
+    });
 builder.Services.AddControllersWithViews(options =>
 {
     options.SuppressAsyncSuffixInActionNames = false;
 });
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultScheme = "cookie";
+    options.DefaultChallengeScheme = "oidc";
+})
+        .AddCookie("cookie")
+        .AddOpenIdConnect("oidc", options =>
+        {
+            options.Authority = _configuration["InteractiveServiceSettings:AuthorityUrl"];
+            options.ClientId = _configuration["InteractiveServiceSettings:ClientId"];
+            options.ClientSecret = _configuration["InteractiveServiceSettings:ClientSecret"];
+
+            options.ResponseType = "code";
+            options.UsePkce = true;
+            options.ResponseMode = "query";
+
+            options.Scope.Add(_configuration["InteractiveServiceSettings:Scopes:0"]);
+            options.SaveTokens = true;
+
+        });
+
+builder.Services.Configure<IdentityServerSettings>(_configuration.GetSection("IdentityServerSettings"));
+builder.Services.AddSingleton<ITokenService, TokenService>();
 
 //add repository
 builder.Services.ConfigureRepositoryWrapper();
@@ -95,9 +128,8 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-//app.UseAuthorization();
-
 app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseEndpoints(endpoints =>
 {
