@@ -1,5 +1,7 @@
 ﻿using EmployeeMVC.Models;
 using EmployeeMVC.Repository;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
 
@@ -14,6 +16,28 @@ namespace EmployeeMVC.Controllers
         public IActionResult Index()
         {
             return View();
+        }
+
+        public async Task<IActionResult> Logout()
+        {
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.SignOutAsync("cookie");
+            // Clear the existing external cookie to ensure a clean login process
+            await HttpContext.ChallengeAsync("oidc");
+
+
+            var tmp = HttpContext.Request.Cookies.Keys;
+
+            var myCookies = HttpContext.Request.Cookies.Keys;
+            foreach (string cookie in myCookies)
+            {
+                CookieOptions c = new CookieOptions()
+                {
+                    Expires = DateTime.Now.AddDays(-1)
+                };
+                Response.Cookies.Append(cookie, cookie, c);
+            }
+            return SignOut("oidc");
         }
 
         public IActionResult Privacy()

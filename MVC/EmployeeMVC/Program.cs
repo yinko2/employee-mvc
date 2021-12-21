@@ -5,8 +5,9 @@ using EmployeeMVC.Settings;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc.Infrastructure;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.OpenApi.Models;
+using Microsoft.IdentityModel.Tokens;
 using System.Configuration;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net.Mime;
 using System.Text.Json;
 
@@ -25,6 +26,8 @@ builder.Services.AddAuthentication("Bearer")
         options.ApiName = "EmployeeMVC";
         options.Authority = "https://localhost:5443";
     });
+
+JwtSecurityTokenHandler.DefaultMapInboundClaims = false;
 builder.Services.AddControllersWithViews(options =>
 {
     options.SuppressAsyncSuffixInActionNames = false;
@@ -35,10 +38,28 @@ builder.Services.AddAuthentication(options =>
     options.DefaultScheme = "cookie";
     options.DefaultChallengeScheme = "oidc";
 })
-        .AddCookie("cookie")
+        .AddCookie("cookie", options =>
+        {
+            options.Cookie.Name = "employeemvcclient";
+
+            options.ExpireTimeSpan = TimeSpan.FromHours(8);
+            options.SlidingExpiration = false;
+
+            // could be used to automatically trigger re-authentication (if you want to do that at the pipeline level)
+            //options.Events.OnValidatePrincipal = async e =>
+            //{
+            //    var currentToken = await e.HttpContext.GetAccessTokenAsync();
+
+            //    if (string.IsNullOrWhiteSpace(currentToken))
+            //    {
+            //        e.RejectPrincipal();
+            //    }
+            //};
+        })
         .AddOpenIdConnect("oidc", options =>
         {
             options.Authority = _configuration["InteractiveServiceSettings:AuthorityUrl"];
+            options.RequireHttpsMetadata = false;
             options.ClientId = _configuration["InteractiveServiceSettings:ClientId"];
             options.ClientSecret = _configuration["InteractiveServiceSettings:ClientSecret"];
 
@@ -47,10 +68,18 @@ builder.Services.AddAuthentication(options =>
             options.ResponseMode = "query";
 
             options.Scope.Add(_configuration["InteractiveServiceSettings:Scopes:0"]);
+
+            // keeps id_token smaller
+            options.GetClaimsFromUserInfoEndpoint = true;
             options.SaveTokens = true;
 
-        });
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                NameClaimType = "name",
+                RoleClaimType = "role"
+            };
 
+        });
 builder.Services.Configure<IdentityServerSettings>(_configuration.GetSection("IdentityServerSettings"));
 builder.Services.AddSingleton<ITokenService, TokenService>();
 
