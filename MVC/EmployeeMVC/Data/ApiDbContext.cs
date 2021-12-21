@@ -9,6 +9,7 @@ namespace EmployeeMVC.Data
     {
         private readonly IConfiguration _configuration;
         private readonly string _connectionString;
+        private readonly string _serverVersion;
         public readonly IHttpContextAccessor _httpContextAccessor;
         public readonly IActionContextAccessor _actionContextAccessor;
         public ApiDbContext(DbContextOptions<ApiDbContext> options, IHttpContextAccessor httpContextAccessor, IActionContextAccessor actionContextAccessor, IConfiguration configuration)
@@ -19,6 +20,7 @@ namespace EmployeeMVC.Data
             _configuration = configuration;
             var mysqlDbSettings = _configuration.GetSection(nameof(MysqlDbSettings)).Get<MysqlDbSettings>();
             _connectionString = mysqlDbSettings.ConnectionString;
+            _serverVersion = mysqlDbSettings.ServerVersion!;
         }
 
         public virtual DbSet<Employee> Employees { get; set; } = null!;
@@ -30,7 +32,7 @@ namespace EmployeeMVC.Data
         {
             if (!optionsBuilder.IsConfigured)
             {
-                optionsBuilder.UseMySql(_connectionString, ServerVersion.Parse("8.0.27-mysql"));
+                optionsBuilder.UseMySql(_connectionString, ServerVersion.Parse(_serverVersion));
             }
         }
 

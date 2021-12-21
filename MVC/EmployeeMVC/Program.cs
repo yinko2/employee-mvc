@@ -58,7 +58,7 @@ builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.ConfigureRepositoryWrapper();
 
 //add database context
-builder.Services.AddDbContext<ApiDbContext>(opt => opt.UseMySql(mysqlDbSettings.ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse("8.0.27-mysql")));
+builder.Services.AddDbContext<ApiDbContext>(opt => opt.UseMySql(mysqlDbSettings.ConnectionString, Microsoft.EntityFrameworkCore.ServerVersion.Parse(mysqlDbSettings.ServerVersion)));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();

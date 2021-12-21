@@ -41,12 +41,12 @@ var migrationsAssembly = typeof(Program).GetTypeInfo().Assembly.GetName().Name;
 if (seed)
 {
     Log.Information("Seeding database...");
-    SeedData.EnsureSeedData(mysqlDbSettings.ConnectionString);
+    SeedData.EnsureSeedData(mysqlDbSettings.ConnectionString, mysqlDbSettings.ServerVersion!);
     Log.Information("Done seeding database.");
 }
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse("8.0.27-mysql"),
+    options.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse(mysqlDbSettings.ServerVersion),
         sqlOptions => sqlOptions.MigrationsAssembly(migrationsAssembly)));
 
 builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -56,12 +56,12 @@ builder.Services.AddIdentityServer()
     .AddAspNetIdentity<IdentityUser>()
     .AddConfigurationStore(options =>
     {
-        options.ConfigureDbContext = builder => builder.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse("8.0.27-mysql"), opt => opt.MigrationsAssembly(migrationsAssembly));
+        options.ConfigureDbContext = builder => builder.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse(mysqlDbSettings.ServerVersion), opt => opt.MigrationsAssembly(migrationsAssembly));
     })
     // this adds the operational data from DB (codes, tokens, consents)
     .AddOperationalStore(options =>
     {
-        options.ConfigureDbContext = builder => builder.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse("8.0.27-mysql"), opt => opt.MigrationsAssembly(migrationsAssembly));
+        options.ConfigureDbContext = builder => builder.UseMySql(mysqlDbSettings.ConnectionString, ServerVersion.Parse(mysqlDbSettings.ServerVersion), opt => opt.MigrationsAssembly(migrationsAssembly));
 
         // this enables automatic token cleanup. this is optional.
         options.EnableTokenCleanup = true;

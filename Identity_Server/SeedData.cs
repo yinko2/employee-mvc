@@ -19,12 +19,12 @@ using Microsoft.EntityFrameworkCore;
 {
     public class SeedData
     {
-        public static void EnsureSeedData(string connectionString)
+        public static void EnsureSeedData(string connectionString, string serverVersion)
         {
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddDbContext<ApplicationDbContext>(options =>
-              options.UseMySql(connectionString, ServerVersion.Parse("8.0.27-mysql")));
+              options.UseMySql(connectionString, ServerVersion.Parse(serverVersion)));
 
             services.AddIdentity<IdentityUser, IdentityRole>()
               .AddEntityFrameworkStores<ApplicationDbContext>()
@@ -32,11 +32,11 @@ using Microsoft.EntityFrameworkCore;
 
             services.AddOperationalDbContext(options =>
             {
-                options.ConfigureDbContext = db => db.UseMySql(connectionString, ServerVersion.Parse("8.0.27-mysql"), sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
+                options.ConfigureDbContext = db => db.UseMySql(connectionString, ServerVersion.Parse(serverVersion), sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
             });
             services.AddConfigurationDbContext(options =>
             {
-                options.ConfigureDbContext = db => db.UseMySql(connectionString, ServerVersion.Parse("8.0.27-mysql"), sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
+                options.ConfigureDbContext = db => db.UseMySql(connectionString, ServerVersion.Parse(serverVersion), sql => sql.MigrationsAssembly(typeof(SeedData).Assembly.FullName));
             });
 
             var serviceProvider = services.BuildServiceProvider();
